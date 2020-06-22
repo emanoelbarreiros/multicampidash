@@ -1,17 +1,3 @@
-"""
-This app creates a simple sidebar layout using inline style arguments and the
-dbc.Nav component.
-
-dcc.Location is used to track the current location. There are two callbacks,
-one uses the current location to render the appropriate page content, the other
-uses the current location to toggle the 'active' properties of the navigation
-links.
-
-For more details on building multi-page Dash applications, check out the Dash
-documentation: https://dash.plot.ly/urls
-"""
-
-import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
@@ -25,11 +11,7 @@ import course
 import multicampi
 import campus
 import monitor
-import maps
 from server import app
-import json
-
-
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -148,19 +130,15 @@ content = html.Div(id='page-content', style=CONTENT_STYLE, className='container'
 app.layout = html.Div([dcc.Location(id='url'), sidebar, content])
 
 data = load_data('cidades_normalizadas.csv', 0)
-localities = maps.load_cities_coordinates('localidades.csv')
-df_localities = maps.load_cities_dataframe('localidades.csv')
-student_count, campi_courses = load_dict_from_csv_student('qtd_estudantes.csv')
 
-with open('pernambuco2.json', encoding='utf8') as file:
-    geojson = json.load(file)
+student_count, campi_courses = load_dict_from_csv_student('qtd_estudantes.csv')
 
 multicampi_layout = multicampi.get_layout(data, student_count)
 
 #course_view = course.Course(app, data, localities)
 course_layout = course.get_layout()
 
-campus_layout = campus.get_layout(data, df_localities, geojson)
+campus_layout = campus.get_layout(data)
 
 #monitor.set_data(...)
 monitor_layout = monitor.get_layout()

@@ -4,6 +4,7 @@ import pandas as pd
 import dash_table as dt
 import plotly.express as px
 
+
 def get_layout(data, student_count):
     data_table, fig, multicampi_enrolled = get_data(data, student_count)
 
