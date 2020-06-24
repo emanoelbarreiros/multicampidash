@@ -5,7 +5,7 @@ import plotly.express as px
 import dash_table as dt
 
 geojson = None
-with open('pernambuco2.json', encoding='utf8') as file:
+with open('data/pernambuco2.json', encoding='utf8') as file:
     geojson = json.load(file)
 
 garanhuns = {'lat': -8.8828, 'lon': -36.4969}
@@ -81,5 +81,39 @@ def get_map(data_cities, color_range):
     return fig
 
 
-dict_localities = load_cities_coordinates('localidades.csv')
-df_localities = load_cities_dataframe('localidades.csv')
+def get_infected_graph(epidemic_data, color_range, date=None):
+    global df_localities
+    df_epidemic = pd.DataFrame(epidemic_data)
+    df_epidemic.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
+    df_epidemic = df_epidemic.loc[::, ['cidade', 'data', 'infectados']]
+
+    # choose some dates to show
+    all_dates = list(df_epidemic[df_epidemic.cidade.eq('garanhuns')]['data'])
+    selected_dates = all_dates[::len(all_dates) // 5]
+    if all_dates[-1] not in selected_dates:
+        # always add the last date if it is not included
+        selected_dates.append(all_dates[-1])
+
+    # filter based on the selected dates
+    df_epidemic = df_epidemic[df_epidemic.data.isin(selected_dates)]
+
+    ids = []
+    for city in df_epidemic['cidade']:
+        local = df_localities.loc[df_localities['cidade'] == city]
+        ids.append(local.iloc[0].id)
+
+    df_epidemic['id'] = ids
+
+    fig = px.choropleth_mapbox(df_epidemic, geojson=geojson, locations='id', color='infectados',
+                               color_continuous_scale="Viridis", featureidkey='properties.id',
+                               range_color=(0, color_range), animation_frame="data", animation_group="id",
+                               mapbox_style="open-street-map",
+                               zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},
+                               opacity=0.5, hover_data=['cidade', 'infectados'],
+                               )
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    return fig
+
+
+dict_localities = load_cities_coordinates('data/localidades.csv')
+df_localities = load_cities_dataframe('data/localidades.csv')
