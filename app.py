@@ -10,29 +10,12 @@ import plotly.express as px
 import course
 import multicampi
 import campus
-import monitor
+import monitoramento
+import maps
 from server import app
 
-# the style arguments for the sidebar. We use position:fixed and a fixed width
-SIDEBAR_STYLE = {
-    'position': 'fixed',
-    'top': 0,
-    'left': 0,
-    'bottom': 0,
-    'width': '16rem',
-    'padding': '2rem 1rem',
-    'background-color': '#f8f9fa',
-}
-
-# the styles for the main content position it to the right of the sidebar and
-# add some padding.
-CONTENT_STYLE = {
-    'margin-left': '18rem',
-    'margin-right': '2rem',
-    'padding': '2rem 1rem',
-}
-
 px.set_mapbox_access_token('pk.eyJ1IjoiZW1hbm9lbGJhcnJlaXJvcyIsImEiOiJja2Izb3QxM3cwbWE5MnJtdnp2eG16azB0In0.nUa34PVgI5csOJTbI-uosg')
+
 
 def remove_accents(s):
     return und.unidecode(s)
@@ -106,42 +89,30 @@ def render_page_content(pathname):
     )
 
 
-sidebar = html.Div(
-    [
-        html.H2('Multicampi Dashboard'),
-        html.P(
-            'Visualização de dados relacionados a COVID-19 para a UPE Multicampi', className='lead'
-        ),
-        dbc.Nav(
-            [
-                dbc.NavLink('Multicampi', href='/multicampi', id='multicampi-link'),
-                dbc.NavLink('Dados por Campus', href='/campus', id='campus-link'),
-                dbc.NavLink('Monitoramento Epidemiológico', href='/monitoramento', id='monitoramento-link'),
-            ],
-            vertical=True,
-            pills=True,
-        ),
-    ],
-    style=SIDEBAR_STYLE,
+nav_multicampi = dbc.NavItem(dbc.NavLink("Multicampi", href="/multicampi"))
+nav_campus = dbc.NavItem(dbc.NavLink("Campus", href="/campus"))
+nav_monitor = dbc.NavItem(dbc.NavLink("Mon. Epidemiológico", href="/monitoramento"))
+
+# this is the default navbar style created by the NavbarSimple component
+navbar = dbc.NavbarSimple(
+    children=[nav_multicampi, nav_campus, nav_monitor],
+    brand="UPE Multicampi - Dashboard",
+    brand_href="#",
+    sticky="top",
+    className="mb-5",
 )
 
-content = html.Div(id='page-content', style=CONTENT_STYLE, className='container')
+content = html.Div(id='page-content', className='container')
+app.layout = html.Div([dcc.Location(id='url'), navbar, content])
 
-app.layout = html.Div([dcc.Location(id='url'), sidebar, content])
-
-data = load_data('cidades_normalizadas.csv', 0)
-
-student_count, campi_courses = load_dict_from_csv_student('qtd_estudantes.csv')
+data = load_data('data/cidades_normalizadas.csv', 0)
+student_count, campi_courses = load_dict_from_csv_student('data/qtd_estudantes.csv')
+localities = maps.load_cities_dataframe('data/localidades.csv')
 
 multicampi_layout = multicampi.get_layout(data, student_count)
-
-#course_view = course.Course(app, data, localities)
 course_layout = course.get_layout()
-
 campus_layout = campus.get_layout(data)
-
-#monitor.set_data(...)
-monitor_layout = monitor.get_layout()
+monitor_layout = monitoramento.get_layout(localities)
 
 
 if __name__ == '__main__':

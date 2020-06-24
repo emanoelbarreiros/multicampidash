@@ -81,21 +81,14 @@ def get_map(data_cities, color_range):
     return fig
 
 
-def get_infected_graph(epidemic_data, color_range, date=None):
+def get_infected_graph(epidemic_data, color_range, date):
     global df_localities
     df_epidemic = pd.DataFrame(epidemic_data)
     df_epidemic.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
     df_epidemic = df_epidemic.loc[::, ['cidade', 'data', 'infectados']]
 
-    # choose some dates to show
-    all_dates = list(df_epidemic[df_epidemic.cidade.eq('garanhuns')]['data'])
-    selected_dates = all_dates[::len(all_dates) // 5]
-    if all_dates[-1] not in selected_dates:
-        # always add the last date if it is not included
-        selected_dates.append(all_dates[-1])
-
     # filter based on the selected dates
-    df_epidemic = df_epidemic[df_epidemic.data.isin(selected_dates)]
+    df_epidemic = df_epidemic[df_epidemic.data == date]
 
     ids = []
     for city in df_epidemic['cidade']:
@@ -103,13 +96,14 @@ def get_infected_graph(epidemic_data, color_range, date=None):
         ids.append(local.iloc[0].id)
 
     df_epidemic['id'] = ids
+    df_epidemic
 
     fig = px.choropleth_mapbox(df_epidemic, geojson=geojson, locations='id', color='infectados',
-                               color_continuous_scale="Viridis", featureidkey='properties.id',
-                               range_color=(0, color_range), animation_frame="data", animation_group="id",
+                               color_continuous_scale="Reds", featureidkey='properties.id',
                                mapbox_style="open-street-map",
+                               range_color=(0, color_range),
                                zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},
-                               opacity=0.5, hover_data=['cidade', 'infectados'],
+                               opacity=0.7, hover_data=['cidade', 'infectados'],
                                )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
