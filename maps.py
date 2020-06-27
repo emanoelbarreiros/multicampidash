@@ -99,7 +99,7 @@ def get_infected_graph(epidemic_data, color_range, date):
     df_epidemic
 
     fig = px.choropleth_mapbox(df_epidemic, geojson=geojson, locations='id', color='infectados',
-                               color_continuous_scale="Reds", featureidkey='properties.id',
+                               color_continuous_scale="YlOrRd", featureidkey='properties.id',
                                mapbox_style="open-street-map",
                                range_color=(0, color_range),
                                zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},

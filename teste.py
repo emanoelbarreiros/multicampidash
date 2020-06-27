@@ -1,14 +1,28 @@
 import spreadsheets as sp
 import pandas as pd
+import maps
 
-# epidemic_data = sp.get_epidemic_data()
-# df_epidemic = pd.DataFrame(epidemic_data)
-# df_epidemic.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
-# df_epidemic = df_epidemic.loc[::, ['cidade', 'data', 'infectados']]
-# all_dates = df_epidemic[df_epidemic.cidade.eq('garanhuns')]['data']
-# all_dates = list(all_dates)
-all_dates = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17, 18,19,20,21,22,23,24,25,26,27,28,29,30,31]
-selected_dates = all_dates[::len(all_dates)//5]
-if all_dates[-1] not in selected_dates:
-    selected_dates.append(all_dates[-1])
-print(selected_dates)
+g_localities = maps.load_cities_dataframe('data/localidades.csv')
+
+city = 'garanhuns'
+df = sp.get_epidemic_data()
+df = pd.DataFrame(df)
+df.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
+df['infectados'] = pd.to_numeric(df['infectados'])
+df['obitos'] = pd.to_numeric(df['obitos'])
+df['novos'] = pd.to_numeric(df['novos'])
+city_data = df[df.cidade == city]
+ms_window_size = 3
+moving_sum = city_data.iloc[:,5].rolling(ms_window_size, center=True).sum()
+rho_offset = 5
+rho = pd.Series([0]*rho_offset + [moving_sum.iloc[i]/moving_sum.iloc[i-rho_offset] for i in range(rho_offset,len(moving_sum))])
+rho_t_window_size = 7
+rho_t = rho.rolling(rho_t_window_size, min_periods=1, center=True).mean()
+
+print(rho_t)
+attack_rate_window_size = 14
+attack_rate = city_data.iloc[:,5].rolling(attack_rate_window_size, min_periods=1).sum()
+attack_rate = attack_rate.to_numpy() * 100000.0 / 139788
+
+epg = rho_t.to_numpy() * attack_rate
+print(epg)
