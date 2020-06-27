@@ -39,7 +39,7 @@ def get_layout(localities):
 
     infected_slider_marks = {}
     for i, date in enumerate(dates_to_show):
-        infected_slider_marks[i] = date
+        infected_slider_marks[i] = date.strftime('%d %b')
 
     layout = html.Div([
         html.Div([
@@ -65,6 +65,7 @@ def get_layout(localities):
             html.Br(),
             html.Div([
                 html.H5('Novos casos de COVID-19 por município'),
+                html.Hr(),
                 html.P('Selecione a visualização desejada:'),
                 dcc.RadioItems(
                     options=[
@@ -79,6 +80,7 @@ def get_layout(localities):
                 html.Div(id='div-new-cases'),
             ]),
             html.Br(),
+            html.Hr(),
             html.H5('Evolução geoespacial da quantidade de infectados'),
             html.Div(id='div-infected-map'),
             html.Br(),
@@ -92,7 +94,13 @@ def get_layout(localities):
                 updatemode='drag'
             ),
             html.Br(),
+            html.Hr(),
             html.H5('Gráficos de risco'),
+            html.Div([
+                html.P('Os gráficos exibidos nesta seção foram adaptados do método desenvolvido pelo IRRD do Estado de Pernambuco.'),
+                html.A('IRRD', href='https://www.irrd.org/'),
+                html.A('Link para o método', href='https://drive.google.com/file/d/1Orwg6iwcClSNU4a8SXoqwKNpvdbW-dgj/view')
+            ]),
             html.Div(children=epg_graphs),
         ], className='col-12')
     ], className='row')
@@ -202,6 +210,17 @@ def calculate_risk(epg):
     else:
         return 'baixo'
 
+
+def calculate_color(risk):
+    if risk == 'alto':
+        return 'red'
+    elif risk == 'moderadoalto':
+        return 'orange'
+    elif risk == 'moderado':
+        return 'yellow'
+    else:
+        return 'green'
+
 def get_epg_data(epidemic_data:pd.DataFrame, localities):
     df = epidemic_data.copy()
     result = pd.DataFrame()
@@ -238,12 +257,14 @@ def get_epg_rhot_graphs(epidemic_data:pd.DataFrame, localities):
                          "moderadoalto": "orange",
                          "moderado": "yellow",
                          "baixo": "green"},
-                     title="{}".format(city))
+                     title="Índice de crescimento potencial: {}".format(city))
 
         fig_rhot = go.Figure()
         x = epg_data[epg_data.cidade == city].data
         y = epg_data[epg_data.cidade == city]['rho_t']
-        fig_rhot.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=city))
+        fig_rhot.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=city, connectgaps=True))
+        fig_rhot.update_layout(title='Velocidade de propagação (média de 7 dias): {}'.format(city), xaxis_title="data",
+                               yaxis_title='rho (média de 7 dias)')
 
         result.append(dcc.Graph(figure=fig_bar))
         result.append(dcc.Graph(figure=fig_rhot))
