@@ -1,4 +1,6 @@
 import csv
+import dash_core_components as dcc
+import dash_html_components as html
 import pandas as pd
 import json
 import plotly.express as px
@@ -9,7 +11,24 @@ with open('data/pernambuco2.json', encoding='utf8') as file:
     geojson = json.load(file)
 
 garanhuns = {'lat': -8.8828, 'lon': -36.4969}
+cities = {
+    'garanhuns': {'lat': -8.8828, 'lon': -36.4969},
+    'arcoverde': {'lat': -8.4176445, 'lon': -37.0585205},
+    'salgueiro': {'lat': -8.072506599, 'lon': -39.1268089},
+    'serra talhada': {'lat': -7.9821906999, 'lon': -38.2893787}
+}
 
+
+def get_layout():
+    layout = html.Div([
+        html.Div([
+            html.Div([
+                html.P('Em desenvolvimento...')
+            ], className='col-12')
+        ], className='row')
+    ])
+
+    return layout
 
 def get_city_table(data_cities):
     data_table = dt.DataTable(
@@ -22,7 +41,7 @@ def get_city_table(data_cities):
         },
         data=data_cities.to_dict('records'),
         style_table={
-            'height': '440px',
+            'maxHeight': '440px',
             'overflowY': 'scroll'
         },
     )
@@ -51,17 +70,23 @@ def load_localities_coord_list(cities):
     return data
 
 
-def load_localities_coord_size_list(cities:pd.Series):
+def load_localities_coord_size_list(cities: pd.Series):
     global dict_localities
     data = []
-    for (city,size) in cities.iteritems():
+    for (city, size) in cities.iteritems():
         if city != 'nenhum':
             data.append([dict_localities[city]['lat'], dict_localities[city]['lon'], size, city])
     return pd.DataFrame(data, columns=['lat', 'lon', 'size', 'city'])
 
 
-def get_map(data_cities, color_range):
+def get_map(data_cities, color_range, center=None):
     global df_localities
+
+    if center is not None:
+        center_coord = cities[center]
+    else:
+        center_coord = cities['garanhuns']
+
     ids = []
     for city in data_cities['cidade']:
         if city != 'nenhum':
@@ -74,15 +99,21 @@ def get_map(data_cities, color_range):
                                color_continuous_scale="deep", featureidkey='properties.id',
                                range_color=(0, color_range),
                                mapbox_style="open-street-map",
-                               zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},
+                               zoom=8, center={"lat": center_coord['lat'], "lon": center_coord['lon']},
                                opacity=0.5, hover_data=['cidade', 'qtd'],
                                )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
 
 
-def get_map_scatter(data_cities, schools, color_range):
+def get_map_scatter(data_cities, schools, color_range, center=None):
     global df_localities
+
+    if center is not None:
+        center_coord = cities[center]
+    else:
+        center_coord = cities['garanhuns']
+
     ids = []
     for city in data_cities['cidade']:
         if city != 'nenhum':
@@ -95,15 +126,21 @@ def get_map_scatter(data_cities, schools, color_range):
                                color_continuous_scale="deep", featureidkey='properties.id',
                                range_color=(0, color_range),
                                mapbox_style="open-street-map",
-                               zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},
+                               zoom=8, center={"lat": center_coord['lat'], "lon": center_coord['lon']},
                                opacity=0.5, hover_data=['cidade', 'qtd'],
                                )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
 
 
-def get_infected_graph(epidemic_data, color_range, date):
+def get_infected_graph(epidemic_data, color_range, date, center=None):
     global df_localities
+
+    if center is not None:
+        center_coord = cities[center]
+    else:
+        center_coord = cities['garanhuns']
+
     df_epidemic = pd.DataFrame(epidemic_data)
     df_epidemic.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
     df_epidemic = df_epidemic.loc[::, ['cidade', 'data', 'infectados']]
@@ -123,7 +160,7 @@ def get_infected_graph(epidemic_data, color_range, date):
                                color_continuous_scale="YlOrRd", featureidkey='properties.id',
                                mapbox_style="open-street-map",
                                range_color=(0, color_range),
-                               zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},
+                               zoom=8, center={"lat": center_coord['lat'], "lon": center_coord['lon']},
                                opacity=0.7, hover_data=['cidade', 'infectados'],
                                )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
@@ -132,3 +169,30 @@ def get_infected_graph(epidemic_data, color_range, date):
 
 dict_localities = load_cities_coordinates('data/localidades.csv')
 df_localities = load_cities_dataframe('data/localidades.csv')
+
+
+def get_table_and_map(data, schools=None, color_range=50, center=None):
+    data_table = pd.DataFrame(data.cidade.value_counts()).reset_index()
+    data_table.columns = ['cidade', 'estudantes']
+
+    data_table = get_city_table(data_table)
+
+    layout_table = html.Div([
+        data_table,
+    ])
+
+    data_map = pd.DataFrame(data.cidade.value_counts()).reset_index()
+    data_map.columns = ['cidade', 'qtd']
+
+    if schools is None:
+        fig = get_map(data_map, color_range, center)
+    else:
+        # MUDAR PARA A CHAMADA A maps.get_map_scatter(data_map, schools, color_range) ASSIM QUE CONSEGUIR PLOTAR AS
+        # ESCOLAS EM CIMA DO MAPA
+        fig = get_map(data_map, color_range, center)
+
+    layout_map = html.Div([
+        dcc.Graph(figure=fig)
+    ])
+
+    return layout_table, layout_map

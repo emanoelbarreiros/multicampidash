@@ -1,6 +1,8 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+
+from maps import get_table_and_map
 from server import app
 import pandas as pd
 import maps
@@ -30,6 +32,7 @@ def get_layout(data, schools):
                         {"label": "Serra Talhada", "value": "Serra Talhada"},
                     ],
                     value='Garanhuns',
+                    clearable=False
                 ),
                 html.Br(),
                 html.H4('Localidades onde declararam residir estudantes do Campus em análise'),
@@ -119,33 +122,6 @@ def get_layout(data, schools):
         # ], className='row')
     ])
     return layout
-
-
-def get_table_and_map(data, schools=None, color_range=50):
-    data_table = pd.DataFrame(data.cidade.value_counts()).reset_index()
-    data_table.columns = ['cidade', 'estudantes']
-
-    data_table = maps.get_city_table(data_table)
-
-    layout_table = html.Div([
-        data_table,
-    ])
-
-    data_map = pd.DataFrame(data.cidade.value_counts()).reset_index()
-    data_map.columns = ['cidade', 'qtd']
-
-    if schools is None:
-        fig = maps.get_map(data_map, color_range)
-    else:
-        # MUDAR PARA A CHAMADA A maps.get_map_scatter(data_map, schools, color_range) ASSIM QUE CONSEGUIR PLOTAR AS
-        # ESCOLAS EM CIMA DO MAPA
-        fig = maps.get_map(data_map, color_range)
-
-    layout_map = html.Div([
-        dcc.Graph(figure=fig)
-    ])
-
-    return layout_table, layout_map
 
 
 def get_transport_table_and_map(data, schools=None, color_range=50, columns=None):

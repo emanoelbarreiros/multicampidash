@@ -13,6 +13,7 @@ import campus
 import monitoramento
 import maps
 from server import app
+import about
 
 px.set_mapbox_access_token('pk.eyJ1IjoiZW1hbm9lbGJhcnJlaXJvcyIsImEiOiJja2Izb3QxM3cwbWE5MnJtdnp2eG16azB0In0.nUa34PVgI5csOJTbI-uosg')
 
@@ -68,7 +69,7 @@ def toggle_active_links(pathname):
     if pathname == '/':
         # Treat page 1 as the homepage / index
         return True, False, False
-    return [pathname == f'/{i}' for i in ['multicampi', 'campus', 'monitoramento']]
+    return [pathname == f'/{i}' for i in ['multicampi', 'campus', 'curso', 'monitoramento']]
 
 
 @app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
@@ -77,8 +78,14 @@ def render_page_content(pathname):
         return multicampi_layout
     elif pathname == '/campus':
         return campus_layout
+    elif pathname == '/curso':
+        return course_layout
     elif pathname == '/monitoramento':
         return monitor_layout
+    elif pathname == '/mapas':
+        return maps_layout
+    elif pathname == '/sobre':
+        return about_layout
     # If the user tries to reach a different page, return a 404 message
     return dbc.Jumbotron(
         [
@@ -91,11 +98,21 @@ def render_page_content(pathname):
 
 nav_multicampi = dbc.NavItem(dbc.NavLink("Multicampi", href="/multicampi"))
 nav_campus = dbc.NavItem(dbc.NavLink("Campus", href="/campus"))
-nav_monitor = dbc.NavItem(dbc.NavLink("Mon. Epidemiológico", href="/monitoramento"))
+nav_curso = dbc.NavItem(dbc.NavLink("Curso", href="/curso"))
+nav_monitor = dbc.DropdownMenu(
+    children=[
+        dbc.DropdownMenuItem("Interativo", href="/monitoramento"),
+        dbc.DropdownMenuItem("Mapas", href="/mapas"),
+    ],
+    nav=True,
+    in_navbar=True,
+    label="Mon. Epidemiológico",
+)
+nav_sobre = dbc.NavItem(dbc.NavLink("Sobre", href="/sobre"))
 
 # this is the default navbar style created by the NavbarSimple component
 navbar = dbc.NavbarSimple(
-    children=[nav_multicampi, nav_campus, nav_monitor],
+    children=[nav_multicampi, nav_campus, nav_curso, nav_monitor, nav_sobre],
     brand="UPE Multicampi - Dashboard",
     brand_href="#",
     sticky="top",
@@ -107,16 +124,18 @@ flask = app.server
 content = html.Div(id='page-content', className='container')
 app.layout = html.Div([dcc.Location(id='url'), navbar, content])
 
-data = load_data('data/cidades_normalizadas.csv', 0)
+data = load_data('data/cidades_normalizadas3.csv', 0)
 student_count, campi_courses = load_dict_from_csv_student('data/qtd_estudantes.csv')
 localities = maps.load_cities_dataframe('data/localidades.csv')
 schools = pd.read_csv('data/escolas.csv', sep=';')
 schools['cidade'] = schools['cidade'].apply(remove_accents)
 
 multicampi_layout = multicampi.get_layout(data, student_count)
-course_layout = course.get_layout()
+course_layout = course.get_layout(data, student_count)
 campus_layout = campus.get_layout(data, schools)
 monitor_layout = monitoramento.get_layout(localities)
+maps_layout = maps.get_layout()
+about_layout = about.get_layout()
 
 
 if __name__ == '__main__':

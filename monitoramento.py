@@ -22,13 +22,9 @@ def get_layout(localities):
     global epidemic_data, dates_to_show, g_localities
     g_localities = localities
     epidemic_data = sp.get_epidemic_data()
-    df = pd.DataFrame(epidemic_data)
-    df.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
-    df['infectados'] = pd.to_numeric(df['infectados'])
-    df['obitos'] = pd.to_numeric(df['obitos'])
-    df['novos'] = pd.to_numeric(df['novos'])
-    df['data'] = pd.to_datetime(df['data'], format='%d/%m/%Y')
-    epidemic_data = df
+    epidemic_data['infectados'] = pd.to_numeric(epidemic_data['infectados'])
+    epidemic_data['obitos'] = pd.to_numeric(epidemic_data['obitos'])
+    epidemic_data['novos'] = pd.to_numeric(epidemic_data['novos'])
 
     infected_graph = get_cumulative_infected_graph(epidemic_data)
     recovered_graph = get_cumulative_recovered_graph(epidemic_data)
@@ -156,7 +152,7 @@ def get_new_per_day(epidemic_data):
 def get_rolling_per_day(epidemic_data:pd.DataFrame):
     data = epidemic_data.copy()
     # new cases are on column 5
-    data['mm_novos'] = data.iloc[:,5].rolling(window=7).mean()
+    data['mm_novos'] = data.iloc[:, 5].rolling(window=7).mean()
 
     fig = go.Figure()
     for city in data.cidade.unique():
@@ -222,11 +218,10 @@ def calculate_color(risk):
         return 'green'
 
 def get_epg_data(epidemic_data:pd.DataFrame, localities):
-    df = epidemic_data.copy()
     result = pd.DataFrame()
-    for city in df.cidade.unique():
+    for city in epidemic_data.cidade.unique():
         inhabitants = localities.loc[localities['cidade'] == city].iloc[0].habitantes
-        city_data = df[df.cidade == city]
+        city_data = epidemic_data[epidemic_data.cidade == city]
         ms_window_size = 3
         moving_sum = city_data.iloc[:, 5].rolling(ms_window_size, min_periods=1, center=True).sum()
         rho_offset = 5
