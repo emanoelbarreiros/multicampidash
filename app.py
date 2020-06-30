@@ -102,6 +102,7 @@ navbar = dbc.NavbarSimple(
     className="mb-5",
 )
 
+flask = app.server
 content = html.Div(id='page-content', className='container')
 app.layout = html.Div([dcc.Location(id='url'), navbar, content])
 
