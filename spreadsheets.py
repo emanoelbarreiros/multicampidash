@@ -4,7 +4,7 @@ import unidecode as und
 
 def get_epidemic_data():
     gc = gspread.service_account(filename='assets/multicampidash-ce36f447e2f0.json')
-    sh = gc.open("Banco V GERES")
+    sh = gc.open("Banco V GERES 2")
     worksheet_list = sh.worksheets()
     result = []
     for sheet in worksheet_list:
