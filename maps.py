@@ -71,7 +71,28 @@ def get_map(data_cities, color_range):
             ids.append('0')
     data_cities['id'] = ids
     fig = px.choropleth_mapbox(data_cities, geojson=geojson, locations='id', color='qtd',
-                               color_continuous_scale="Viridis", featureidkey='properties.id',
+                               color_continuous_scale="deep", featureidkey='properties.id',
+                               range_color=(0, color_range),
+                               mapbox_style="open-street-map",
+                               zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},
+                               opacity=0.5, hover_data=['cidade', 'qtd'],
+                               )
+    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    return fig
+
+
+def get_map_scatter(data_cities, schools, color_range):
+    global df_localities
+    ids = []
+    for city in data_cities['cidade']:
+        if city != 'nenhum':
+            local = df_localities.loc[df_localities['cidade'] == city]
+            ids.append(local.iloc[0].id)
+        else:
+            ids.append('0')
+    data_cities['id'] = ids
+    fig = px.choropleth_mapbox(data_cities, geojson=geojson, locations='id', color='qtd',
+                               color_continuous_scale="deep", featureidkey='properties.id',
                                range_color=(0, color_range),
                                mapbox_style="open-street-map",
                                zoom=8, center={"lat": garanhuns['lat'], "lon": garanhuns['lon']},

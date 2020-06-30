@@ -102,6 +102,7 @@ navbar = dbc.NavbarSimple(
     className="mb-5",
 )
 
+app.title = 'Dashboard Multicampi UPE'
 flask = app.server
 content = html.Div(id='page-content', className='container')
 app.layout = html.Div([dcc.Location(id='url'), navbar, content])
@@ -109,10 +110,12 @@ app.layout = html.Div([dcc.Location(id='url'), navbar, content])
 data = load_data('data/cidades_normalizadas.csv', 0)
 student_count, campi_courses = load_dict_from_csv_student('data/qtd_estudantes.csv')
 localities = maps.load_cities_dataframe('data/localidades.csv')
+schools = pd.read_csv('data/escolas.csv', sep=';')
+schools['cidade'] = schools['cidade'].apply(remove_accents)
 
 multicampi_layout = multicampi.get_layout(data, student_count)
 course_layout = course.get_layout()
-campus_layout = campus.get_layout(data)
+campus_layout = campus.get_layout(data, schools)
 monitor_layout = monitoramento.get_layout(localities)
 
 
