@@ -5,6 +5,7 @@ import pandas as pd
 import json
 import plotly.express as px
 import dash_table as dt
+from server import app
 
 geojson = None
 with open('data/pernambuco2.json', encoding='utf8') as file:
@@ -29,10 +30,10 @@ def get_layout():
         ], className='row'),
         html.Div([
             html.Div([
-                html.Img(src='assets/31-05-2020.jpg', width=1100),
+                html.Img(src=app.get_asset_url('31-05-2020.jpg'), width=1100),
                 html.P('Distribuição Espacial de casos de Covid-19 na V Região - Maio de 2020'),
                 html.Hr(),
-                html.Img(src='assets/30-06-2020.jpg', width=1100),
+                html.Img(src=app.get_asset_url('30-06-2020.jpg'), width=1100),
                 html.P('Distribuição Espacial de casos de Covid-19 na V Região - Junho de 2020'),
             ], className='col-12 text-center'),
         ], className='row'),
