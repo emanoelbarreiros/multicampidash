@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import unidecode as und
 import pandas as pd
 import csv
@@ -62,15 +62,23 @@ def load_dict_from_csv_student(file):
 # this callback uses the current pathname to set the active state of the
 # corresponding nav link to true, allowing users to tell see page they are on
 @app.callback(
-    [Output(f'{p}-link', 'active') for p in ['multicampi', 'campus', 'monitoramento']],
+    [Output(f'{p}-link', 'active') for p in ['multicampi', 'campus', 'monitoramento', 'mapas','sobre']],
     [Input('url', 'pathname')],
 )
 def toggle_active_links(pathname):
     if pathname == '/':
         # Treat page 1 as the homepage / index
         return True, False, False
-    return [pathname == f'/{i}' for i in ['multicampi', 'campus', 'curso', 'monitoramento']]
+    return [pathname == f'/{i}' for i in ['multicampi', 'campus', 'curso', 'monitoramento', 'mapas', 'sobre']]
 
+
+@app.callback(Output(f"navbar-collapse", "is_open"),
+             [Input(f"navbar-toggler", "n_clicks")],
+             [State(f"navbar-collapse", "is_open")],)
+def toggle_navbar_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 @app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
 def render_page_content(pathname):
@@ -111,12 +119,43 @@ nav_monitor = dbc.DropdownMenu(
 nav_sobre = dbc.NavItem(dbc.NavLink("Sobre", href="/sobre"))
 
 # this is the default navbar style created by the NavbarSimple component
-navbar = dbc.NavbarSimple(
-    children=[nav_multicampi, nav_campus, nav_curso, nav_monitor, nav_sobre],
-    brand="UPE Multicampi - Dashboard",
-    brand_href="#",
-    sticky="top",
+# navbar = dbc.NavbarSimple(
+#     children=[nav_multicampi, nav_campus, nav_curso, nav_monitor, nav_sobre],
+#     brand="UPE Multicampi - Dashboard",
+#     brand_href="#",
+#     sticky="top",
+#     className="mb-5",
+# )
+
+# this example that adds a logo to the navbar brand
+navbar = dbc.Navbar(
+    dbc.Container(
+        [
+            html.A(
+                # Use row and col to control vertical alignment of logo / brand
+                dbc.Row(
+                    [
+                        dbc.Col(html.Img(src='/assets/upe-logo.png', height="30px"), className='col-3'),
+                        dbc.Col(dbc.NavbarBrand("Multicampi - Dashboard", className="ml-2")),
+                    ],
+                    align="center",
+                    no_gutters=True,
+                ),
+                href="http://www.upe.br/garanhuns/",
+            ),
+            dbc.NavbarToggler(id="navbar-toggler"),
+            dbc.Collapse(
+                dbc.Nav(
+                    [nav_multicampi, nav_campus, nav_curso, nav_monitor, nav_sobre], className="ml-auto", navbar=True
+                ),
+                id="navbar-collapse",
+                navbar=True,
+            ),
+        ]
+    ),
+    color="light",
     className="mb-5",
+    expand='lg'
 )
 
 app.title = 'Dashboard Multicampi UPE'
