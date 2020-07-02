@@ -10,7 +10,9 @@ def get_layout():
                 html.Hr(),
                 html.P('Este sistema foi desenvolvimento pela Comissão de Monitoramento Epidemiológico do Multicampi UPE.'),
                 html.P('Os dados foram obtidos dos boletins epidemiológicos das cidades monitoradas pela equipe.'),
-                html.P('A Comissão de Monitoramento Epidemiológico é composta pelos seguintes integrantes:'),
+                html.P('A Comissão de Monitoramento Epidemiológico é composta pelos integrantes listados abaixo.'),
+                html.Br(),
+                html.P('Campus Garanhuns:'),
                 html.Ul([
                     html.Li('Prof. Carlo Marcelo Revoredo da Silva'),
                     html.Li('Prof. Dâmocles Aurélio Nascimento da Silva Alves'),
@@ -27,6 +29,12 @@ def get_layout():
                     html.Li('Luiz Gustavo Gomes de Oliveira Matias'),
                     html.Li('Muryllo Pimenta de Oliveira'),
                     html.Li('Sávio Santos de Araújo'),
+                ]),
+                html.P('Campus Salgueiro:'),
+                html.Ul([
+                    html.Li('Profa. Eryka Fernanda Miranda Sobral'),
+                    html.Li('Profa. Josiete da Silva Mendes'),
+                    html.Li('Prof. Wanderberg Salves Brandão'),
                 ])
             ], className='col-12')
         ], className='row'),
