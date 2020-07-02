@@ -2,8 +2,8 @@ import unidecode as und
 import pandas as pd
 
 
-def get_epidemic_data():
-    data = pd.read_excel('data/dados_epidemicos.xlsx', sheet_name=None, skiprows=1)
+def get_epidemic_data(campus):
+    data = pd.read_excel('data/dados_epidemicos_' + campus + '.xlsx', sheet_name=None, skiprows=1)
     worksheet_list = data.keys()
     result = pd.DataFrame()
 

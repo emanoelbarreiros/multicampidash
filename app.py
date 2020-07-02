@@ -80,6 +80,15 @@ def toggle_navbar_collapse(n, is_open):
         return not is_open
     return is_open
 
+
+def get_target(path, path_target):
+    tokens = str(path).split('/')
+    if len(tokens) >= path_target:
+        return tokens[path_target]
+
+    return None
+
+
 @app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
 def render_page_content(pathname):
     if pathname in ['/', '/multicampi']:
@@ -88,8 +97,10 @@ def render_page_content(pathname):
         return campus_layout
     elif pathname == '/curso':
         return course_layout
-    elif pathname == '/monitoramento':
-        return monitor_layout
+    elif pathname == '/monitoramento/salgueiro':
+        return monitoramento.get_layout(localities, 'salgueiro')
+    elif pathname == '/monitoramento/garanhuns':
+        return monitoramento.get_layout(localities, 'garanhuns')
     elif pathname == '/mapas':
         return maps_layout
     elif pathname == '/sobre':
@@ -109,8 +120,10 @@ nav_campus = dbc.NavItem(dbc.NavLink("Campus", href="/campus"))
 nav_curso = dbc.NavItem(dbc.NavLink("Curso", href="/curso"))
 nav_monitor = dbc.DropdownMenu(
     children=[
-        dbc.DropdownMenuItem("Interativo", href="/monitoramento"),
         dbc.DropdownMenuItem("Mapas", href="/mapas"),
+        dbc.DropdownMenuItem('Interativo', header=True),
+        dbc.DropdownMenuItem("Garanhuns", href="/monitoramento/garanhuns"),
+        dbc.DropdownMenuItem("Salgueiro", href="/monitoramento/salgueiro"),
     ],
     nav=True,
     in_navbar=True,
@@ -172,10 +185,9 @@ schools['cidade'] = schools['cidade'].apply(remove_accents)
 multicampi_layout = multicampi.get_layout(data, student_count)
 course_layout = course.get_layout(data, student_count)
 campus_layout = campus.get_layout(data, schools)
-monitor_layout = monitoramento.get_layout(localities)
 maps_layout = maps.get_layout()
 about_layout = about.get_layout()
 
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)

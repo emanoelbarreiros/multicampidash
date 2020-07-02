@@ -8,7 +8,6 @@ from dash.dependencies import Input, Output
 from server import app
 import plotly.express as px
 from numpy import nan
-from plotly.subplots import make_subplots
 
 client_id = '856477862793-451r4biqr9543d3oc2injf6iif2e34ac.apps.googleusercontent.com'
 client_secret = 'wlhHsBYLGXztszG38-VaVqlS'
@@ -16,22 +15,23 @@ epidemic_data = None
 dates_to_show = None
 n_dates = 15
 g_localities = None
+g_campus = None
 
-
-def get_layout(localities):
-    global epidemic_data, dates_to_show, g_localities
+def get_layout(localities, campus):
+    global epidemic_data, dates_to_show, g_localities, g_campus
+    g_campus = campus
     g_localities = localities
-    epidemic_data = sp.get_epidemic_data()
+    epidemic_data = sp.get_epidemic_data(campus)
     epidemic_data['infectados'] = pd.to_numeric(epidemic_data['infectados'])
     epidemic_data['obitos'] = pd.to_numeric(epidemic_data['obitos'])
     epidemic_data['novos'] = pd.to_numeric(epidemic_data['novos'])
 
-    infected_graph = get_cumulative_infected_graph(epidemic_data)
-    recovered_graph = get_cumulative_recovered_graph(epidemic_data)
-    deceased_graph = get_cumulative_deceased_graph(epidemic_data)
+    infected_graph = get_cumulative_infected_graph()
+    recovered_graph = get_cumulative_recovered_graph()
+    deceased_graph = get_cumulative_deceased_graph()
     epg_graphs = get_epg_rhot_graphs(epidemic_data, localities)
 
-    dates_to_show = get_dates_to_show(epidemic_data, n_dates)
+    dates_to_show = get_dates_to_show(epidemic_data, campus)
 
     infected_slider_marks = {}
     for i, date in enumerate(dates_to_show):
@@ -39,7 +39,7 @@ def get_layout(localities):
 
     layout = html.Div([
         html.Div([
-            html.H1('Monitoramento Epidemiológico'),
+            html.H1('Monitoramento Epidemiológico - {}'.format(campus.capitalize())),
             html.Hr(),
             dcc.Tabs([
                 dcc.Tab(label='Infectados', children=[
@@ -103,7 +103,7 @@ def get_layout(localities):
     return layout
 
 
-def get_cumulative_log_graph(data, variable):
+def get_cumulative_log_graph(variable):
     epidemic_data
 
     fig = go.Figure()
@@ -125,16 +125,16 @@ def get_cumulative_log_graph(data, variable):
     return fig
 
 
-def get_cumulative_infected_graph(epidemic_data):
-    return get_cumulative_log_graph(epidemic_data, 'infectados')
+def get_cumulative_infected_graph():
+    return get_cumulative_log_graph('infectados')
 
 
-def get_cumulative_recovered_graph(epidemic_data):
-    return get_cumulative_log_graph(epidemic_data, 'recuperados')
+def get_cumulative_recovered_graph():
+    return get_cumulative_log_graph('recuperados')
 
 
-def get_cumulative_deceased_graph(epidemic_data):
-    return get_cumulative_log_graph(epidemic_data, 'obitos')
+def get_cumulative_deceased_graph():
+    return get_cumulative_log_graph('obitos')
 
 
 def get_new_per_day(epidemic_data):
@@ -167,15 +167,15 @@ def get_rolling_per_day(epidemic_data:pd.DataFrame):
 
 @app.callback(Output('div-infected-map', 'children'), [Input('slider-infected-graph', 'value')])
 def update_infected_map(date):
-    infected_map = maps.get_infected_graph(epidemic_data, 200, dates_to_show[date])
+    infected_map = maps.get_infected_graph(epidemic_data, 200, dates_to_show[date], g_campus)
     return dcc.Graph(figure=infected_map)
 
 
-def get_dates_to_show(epidemic_data, n_dates_to_show):
+def get_dates_to_show(epidemic_data, campus):
     df_epidemic = epidemic_data.loc[::, ['cidade', 'data']]
 
     # choose some dates to show
-    all_dates = list(df_epidemic[df_epidemic.cidade.eq('garanhuns')]['data'])
+    all_dates = list(df_epidemic[df_epidemic.cidade.eq(campus)]['data'])
     # selected_dates = all_dates[:: len(all_dates) // n_dates_to_show]
     selected_dates = all_dates[::7]
     if all_dates[-1] not in selected_dates:

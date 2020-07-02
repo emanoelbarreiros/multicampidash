@@ -165,7 +165,6 @@ def get_infected_graph(epidemic_data, color_range, date, center=None):
         ids.append(local.iloc[0].id)
 
     df_epidemic['id'] = ids
-    df_epidemic
 
     fig = px.choropleth_mapbox(df_epidemic, geojson=geojson, locations='id', color='infectados',
                                color_continuous_scale="YlOrRd", featureidkey='properties.id',
