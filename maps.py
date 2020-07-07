@@ -169,6 +169,10 @@ def get_infected_graph(epidemic_data, color_range, date, center=None):
     return fig
 
 
+dict_localities = load_cities_coordinates('data/localidades.csv')
+df_localities = load_cities_dataframe('data/localidades.csv')
+
+
 def get_table_and_map(data, schools=None, color_range=50, center=None):
     data_table = pd.DataFrame(data.cidade.value_counts()).reset_index()
     data_table.columns = ['cidade', 'estudantes']
