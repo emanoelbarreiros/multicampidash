@@ -7,30 +7,28 @@ import maps
 from dash.dependencies import Input, Output
 from server import app
 import plotly.express as px
-from numpy import nan
 
 client_id = '856477862793-451r4biqr9543d3oc2injf6iif2e34ac.apps.googleusercontent.com'
 client_secret = 'wlhHsBYLGXztszG38-VaVqlS'
-epidemic_data = None
 dates_to_show = None
 n_dates = 15
 g_localities = None
 g_campus = None
+g_epidemic_data = None
+
 
 def get_layout(localities, campus):
-    global epidemic_data, dates_to_show, g_localities, g_campus
+    global g_epidemic_data, dates_to_show, g_localities, g_campus
     g_campus = campus
     g_localities = localities
+
     epidemic_data = sp.get_epidemic_data(campus)
-    epidemic_data['infectados'] = pd.to_numeric(epidemic_data['infectados'])
-    epidemic_data['obitos'] = pd.to_numeric(epidemic_data['obitos'])
-    epidemic_data['novos'] = pd.to_numeric(epidemic_data['novos'])
+    g_epidemic_data = epidemic_data
 
-    infected_graph = get_cumulative_infected_graph()
-    recovered_graph = get_cumulative_recovered_graph()
-    deceased_graph = get_cumulative_deceased_graph()
-    epg_graphs = get_epg_rhot_graphs(epidemic_data, localities)
-
+    infected_graph = get_cumulative_infected_graph(epidemic_data)
+    recovered_graph = get_cumulative_recovered_graph(epidemic_data)
+    deceased_graph = get_cumulative_deceased_graph(epidemic_data)
+    epg_graphs = get_epg_rhot_graphs(epidemic_data, campus, localities)
     dates_to_show = get_dates_to_show(epidemic_data, campus)
 
     infected_slider_marks = {}
@@ -76,8 +74,8 @@ def get_layout(localities, campus):
                 html.Div(id='div-new-cases'),
             ]),
             html.Br(),
-            html.Hr(),
             html.H5('Evolução geoespacial da quantidade de infectados'),
+            html.Hr(),
             html.Div(id='div-infected-map'),
             html.Br(),
             html.P('Selecione a data abaixo para atualizar o mapa'),
@@ -103,9 +101,7 @@ def get_layout(localities, campus):
     return layout
 
 
-def get_cumulative_log_graph(variable):
-    epidemic_data
-
+def get_cumulative_log_graph(epidemic_data, variable):
     fig = go.Figure()
     for city in epidemic_data.cidade.unique():
         city_data = epidemic_data[epidemic_data.cidade == city]
@@ -125,16 +121,16 @@ def get_cumulative_log_graph(variable):
     return fig
 
 
-def get_cumulative_infected_graph():
-    return get_cumulative_log_graph('infectados')
+def get_cumulative_infected_graph(epidemic_data):
+    return get_cumulative_log_graph(epidemic_data, 'infectados')
 
 
-def get_cumulative_recovered_graph():
-    return get_cumulative_log_graph('recuperados')
+def get_cumulative_recovered_graph(epidemic_data):
+    return get_cumulative_log_graph(epidemic_data, 'recuperados')
 
 
-def get_cumulative_deceased_graph():
-    return get_cumulative_log_graph('obitos')
+def get_cumulative_deceased_graph(epidemic_data):
+    return get_cumulative_log_graph(epidemic_data, 'obitos')
 
 
 def get_new_per_day(epidemic_data):
@@ -150,13 +146,10 @@ def get_new_per_day(epidemic_data):
 
 
 def get_rolling_per_day(epidemic_data:pd.DataFrame):
-    data = epidemic_data.copy()
-    # new cases are on column 5
-    data['mm_novos'] = data.iloc[:, 5].rolling(window=7).mean()
-
+    #epidemic_data.append TODO melhorar isso aqui ver se dá pra deixar de usar o copy
     fig = go.Figure()
-    for city in data.cidade.unique():
-        city_data = data[data.cidade == city]
+    for city in epidemic_data.cidade.unique():
+        city_data = epidemic_data[epidemic_data.cidade == city]
         x = city_data.data
         y = city_data['mm_novos']
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=city))
@@ -167,7 +160,7 @@ def get_rolling_per_day(epidemic_data:pd.DataFrame):
 
 @app.callback(Output('div-infected-map', 'children'), [Input('slider-infected-graph', 'value')])
 def update_infected_map(date):
-    infected_map = maps.get_infected_graph(epidemic_data, 200, dates_to_show[date], g_campus)
+    infected_map = maps.get_infected_graph(g_epidemic_data, 200, dates_to_show[date], g_campus)
     return dcc.Graph(figure=infected_map)
 
 
@@ -189,9 +182,9 @@ def get_dates_to_show(epidemic_data, campus):
 def update_new_per_day_graph(option):
     figure = None
     if option == 'M':
-        figure = get_rolling_per_day(epidemic_data)
+        figure = get_rolling_per_day(g_epidemic_data)
     elif option == 'O':
-        figure = get_new_per_day(epidemic_data)
+        figure = get_new_per_day(g_epidemic_data)
 
     return dcc.Graph(figure=figure)
 
@@ -217,33 +210,14 @@ def calculate_color(risk):
     else:
         return 'green'
 
-def get_epg_data(epidemic_data:pd.DataFrame, localities):
-    result = pd.DataFrame()
-    for city in epidemic_data.cidade.unique():
-        inhabitants = localities.loc[localities['cidade'] == city].iloc[0].habitantes
-        city_data = epidemic_data[epidemic_data.cidade == city]
-        ms_window_size = 3
-        moving_sum = city_data.iloc[:, 5].rolling(ms_window_size, min_periods=1, center=True).sum()
-        rho_offset = 5
-        rho = pd.Series([nan] * rho_offset
-                        + [moving_sum.iloc[i] / moving_sum.iloc[i - rho_offset] for i in range(rho_offset, len(moving_sum))])
-        rho_t_window_size = 7
-        rho_t = rho.rolling(rho_t_window_size, min_periods=1, center=True).mean()
 
-        attack_rate_window_size = 14
-        attack_rate = city_data.iloc[:, 5].rolling(attack_rate_window_size, min_periods=1, ).sum()
-
-        epg = rho_t.to_numpy() * attack_rate.to_numpy() * (100000.0 / inhabitants)
-        city_data['epg'] = epg
-        city_data['risk'] = city_data.epg.apply(calculate_risk)
-        city_data['rho_t'] = rho_t.to_numpy()
-        result = result.append(city_data)
-
+def get_epg_data(epidemic_data:pd.DataFrame, campus, localities):
+    result = pd.read_excel('data/dados_' + campus + '.xlsx')
     return result
 
 
-def get_epg_rhot_graphs(epidemic_data:pd.DataFrame, localities):
-    epg_data = get_epg_data(epidemic_data, localities)
+def get_epg_rhot_graphs(epidemic_data:pd.DataFrame, campus, localities):
+    epg_data = get_epg_data(epidemic_data, campus, localities)
     result = []
     for city in epg_data.cidade.unique():
         fig_bar = px.bar(epg_data[epg_data.cidade.eq(city)], y="epg", x="data", hover_name='risk', color='risk',

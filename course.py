@@ -278,7 +278,7 @@ def update_set4(campus_course:str):
     data_course = global_data[global_data.campus.eq(campus) & global_data.curso.eq(course)]
     frame = pd.DataFrame(data_course['ambiente'].value_counts())
     perc = data_course['ambiente'].value_counts(normalize=True) * 100
-    frame['perc'] = perc
+    frame['perc'] = perc #TODO olhar aqui pra tentar resolver o SettingUpWithCopyWarning
     frame = frame.reset_index()
     frame.columns = ['resposta', 'quantidade', 'proporção (%)']
 

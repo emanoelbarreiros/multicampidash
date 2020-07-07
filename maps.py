@@ -155,19 +155,8 @@ def get_infected_graph(epidemic_data, color_range, date, center=None):
     else:
         center_coord = cities['garanhuns']
 
-    df_epidemic = pd.DataFrame(epidemic_data)
-    df_epidemic.columns = ['cidade', 'data', 'infectados', 'recuperados', 'obitos', 'novos']
-    df_epidemic = df_epidemic.loc[::, ['cidade', 'data', 'infectados']]
-
     # filter based on the selected dates
-    df_epidemic = df_epidemic[df_epidemic.data == date]
-
-    ids = []
-    for city in df_epidemic['cidade']:
-        local = df_localities.loc[df_localities['cidade'] == city]
-        ids.append(local.iloc[0].id)
-
-    df_epidemic['id'] = ids
+    df_epidemic = epidemic_data[epidemic_data.data == date]
 
     fig = px.choropleth_mapbox(df_epidemic, geojson=geojson, locations='id', color='infectados',
                                color_continuous_scale="YlOrRd", featureidkey='properties.id',
@@ -178,10 +167,6 @@ def get_infected_graph(epidemic_data, color_range, date, center=None):
                                )
     fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
     return fig
-
-
-dict_localities = load_cities_coordinates('data/localidades.csv')
-df_localities = load_cities_dataframe('data/localidades.csv')
 
 
 def get_table_and_map(data, schools=None, color_range=50, center=None):
