@@ -12,7 +12,7 @@ def get_layout():
                 html.P('Os dados foram obtidos dos boletins epidemiológicos das cidades monitoradas pela equipe.'),
                 html.P('A Comissão de Monitoramento Epidemiológico é composta pelos integrantes listados abaixo.'),
                 html.Br(),
-                html.P('Campus Garanhuns:'),
+                html.P('UPE Campus Garanhuns:'),
                 html.Ul([
                     html.Li('Prof. Carlo Marcelo Revoredo da Silva'),
                     html.Li('Prof. Dâmocles Aurélio Nascimento da Silva Alves'),
@@ -30,18 +30,22 @@ def get_layout():
                     html.Li('Muryllo Pimenta de Oliveira'),
                     html.Li('Sávio Santos de Araújo'),
                 ]),
-                html.P('Campus Salgueiro:'),
+                html.P('UPE Campus Salgueiro:'),
                 html.Ul([
                     html.Li('Profa. Eryka Fernanda Miranda Sobral'),
                     html.Li('Profa. Josiete da Silva Mendes'),
                     html.Li('Prof. Wanderberg Salves Brandão'),
+                ]),
+                html.P('UFPE:'),
+                html.Ul([
+                    html.Li('Getúlio Valdemir Batista'),
                 ])
             ], className='col-12')
         ], className='row'),
         html.Div([
             html.Div([
                 html.Div([
-                    html.P('Dados atualizados em 06/07/2020 às 09:46.')
+                    html.P('Dados atualizados em 13/07/2020 às 16:33.')
                 ], className='col-12')
             ])
         ], className='row')
