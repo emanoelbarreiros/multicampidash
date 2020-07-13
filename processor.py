@@ -48,9 +48,6 @@ campi = ['garanhuns', 'salgueiro']
 
 for campus in campi:
     localities = maps.load_cities_dataframe('data/localidades.csv')
-    epidemic_data = sp.get_epidemic_data(campus)
-    epidemic_data['infectados'] = pd.to_numeric(epidemic_data['infectados'])
-    epidemic_data['obitos'] = pd.to_numeric(epidemic_data['obitos'])
-    epidemic_data['novos'] = pd.to_numeric(epidemic_data['novos'])
+    epidemic_data = sp.get_raw_data(campus)
 
     process_epg_data(epidemic_data, campus, localities)
