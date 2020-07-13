@@ -29,67 +29,60 @@ def get_layout(localities, campus):
     recovered_graph = get_cumulative_recovered_graph(epidemic_data)
     deceased_graph = get_cumulative_deceased_graph(epidemic_data)
     epg_graphs = get_epg_rhot_graphs(epidemic_data, campus, localities)
-    dates_to_show = get_dates_to_show(epidemic_data, campus)
+    new_cases_rolling_graph = get_rolling_per_day(g_epidemic_data)
+    new_cases_graph = get_new_per_day(g_epidemic_data)
 
-    infected_slider_marks = {}
-    for i, date in enumerate(dates_to_show):
-        infected_slider_marks[i] = date.strftime('%d %b')
+    date_to_show = get_dates_to_show(epidemic_data, campus)
+    infected_map = maps.get_infected_graph(g_epidemic_data, 200, date_to_show, g_campus)
 
     layout = html.Div([
         html.Div([
             html.H1('Monitoramento Epidemiológico - {}'.format(campus.capitalize())),
             html.Hr(),
-            dcc.Tabs([
-                dcc.Tab(label='Infectados', children=[
-                    html.Div([
-                        dcc.Graph(figure=infected_graph)
+            dcc.Loading(
+                type='default',
+                children=dcc.Tabs([
+                    dcc.Tab(label='Infectados', children=[
+                        html.Div([
+                            dcc.Graph(figure=infected_graph)
+                        ]),
                     ]),
-                ]),
-                dcc.Tab(label='Recuperados', children=[
-                    html.Div([
-                        dcc.Graph(figure=recovered_graph)
+                    dcc.Tab(label='Recuperados', children=[
+                        html.Div([
+                            dcc.Graph(figure=recovered_graph)
+                        ]),
                     ]),
-                ]),
-                dcc.Tab(label='Óbitos', children=[
-                    html.Div([
-                        dcc.Graph(figure=deceased_graph)
-                    ]),
+                    dcc.Tab(label='Óbitos', children=[
+                        html.Div([
+                            dcc.Graph(figure=deceased_graph)
+                        ]),
+                    ])
                 ])
-            ]),
-            html.Br(),
-            html.Div([
-                html.H5('Novos casos de COVID-19 por município'),
-                html.Hr(),
-                html.P('Selecione a visualização desejada:'),
-                dcc.RadioItems(
-                    options=[
-                        {'label': 'Média móvel (7 dias)', 'value': 'M'},
-                        {'label': 'Novos casos por dia', 'value': 'O'}
-                    ],
-                    value='M',
-                    labelStyle={'display': 'block'},
-                    id='radio-rolling-average'
-                ),
-                html.Br(),
-                html.Div(id='div-new-cases'),
-            ]),
-            html.Br(),
-            html.H5('Evolução geoespacial da quantidade de infectados'),
-            html.Hr(),
-            html.Div(id='div-infected-map'),
-            html.Br(),
-            html.P('Selecione a data abaixo para atualizar o mapa'),
-            dcc.Slider(
-                id='slider-infected-graph',
-                marks=infected_slider_marks,
-                min=0,
-                max=len(dates_to_show) - 1,
-                value=0,
-                updatemode='drag'
             ),
             html.Br(),
+            html.Div([
+                html.H5('Novos casos de COVID-19 por município (média móvel)'),
+                html.Hr(),
+                html.Br(),
+                html.Div([
+                    dcc.Graph(figure=new_cases_rolling_graph)
+                ]),
+                html.H5('Novos casos de COVID-19 por município'),
+                html.Hr(),
+                html.Br(),
+                html.Div([
+                    dcc.Graph(figure=new_cases_graph)
+                ]),
+            ]),
+            html.Br(),
+            html.H5('Distribuição geoespacial da quantidade de infectados em {}'.format(date_to_show.strftime('%d/%m/%Y'))),
             html.Hr(),
+            html.Div([
+                dcc.Graph(figure=infected_map)
+            ]),
+            html.Br(),
             html.H5('Gráficos de risco'),
+            html.Hr(),
             html.Div([
                 html.P('Os gráficos exibidos nesta seção foram adaptados do método desenvolvido pelo IRRD do Estado de Pernambuco.'),
                 html.A('IRRD', href='https://www.irrd.org/'),
@@ -167,26 +160,9 @@ def update_infected_map(date):
 def get_dates_to_show(epidemic_data, campus):
     df_epidemic = epidemic_data.loc[::, ['cidade', 'data']]
 
-    # choose some dates to show
     all_dates = list(df_epidemic[df_epidemic.cidade.eq(campus)]['data'])
-    # selected_dates = all_dates[:: len(all_dates) // n_dates_to_show]
-    selected_dates = all_dates[::7]
-    if all_dates[-1] not in selected_dates:
-        # always add the last date if it is not included
-        selected_dates.append(all_dates[-1])
 
-    return selected_dates
-
-
-@app.callback(Output('div-new-cases', 'children'), [Input('radio-rolling-average', 'value')])
-def update_new_per_day_graph(option):
-    figure = None
-    if option == 'M':
-        figure = get_rolling_per_day(g_epidemic_data)
-    elif option == 'O':
-        figure = get_new_per_day(g_epidemic_data)
-
-    return dcc.Graph(figure=figure)
+    return all_dates[-1]
 
 
 def calculate_risk(epg):
