@@ -39,6 +39,7 @@ def get_layout(localities, campus):
         html.Div([
             html.H1('Monitoramento Epidemiológico - {}'.format(campus.capitalize())),
             html.Hr(),
+            html.P('Todos as informações exibidas nesta tela são computados a partir dos dados dos boletins epidemiológicos divulgados pelas prefeituras dos municípios em análise.'),
             dcc.Loading(
                 type='default',
                 children=dcc.Tabs([

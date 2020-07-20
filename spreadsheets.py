@@ -11,6 +11,7 @@ def get_raw_data(campus):
     for sheet in worksheet_list:
         # ignore the first two rows and only get the rows
         city = str.lower(und.unidecode(sheet))
+        print(city)
         city_data = data[sheet]
         city_data.columns = ['data', 'infectados', 'recuperados', 'obitos', 'novos']
         city_data.insert(0, 'cidade', city)
