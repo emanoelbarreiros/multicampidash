@@ -30,6 +30,9 @@ def get_layout():
         ], className='row'),
         html.Div([
             html.Div([
+                html.Img(src='/assets/19-07-2020.jpg', width=1100),
+                html.P('Distribuição Espacial de casos de Covid-19 na V Região - 19 de Julho de 2020.'),
+                html.Hr(),
                 html.Img(src='/assets/12-07-2020.jpg', width=1100),
                 html.P('Distribuição Espacial de casos de Covid-19 na V Região - 12 de Julho de 2020.'),
                 html.Hr(),
