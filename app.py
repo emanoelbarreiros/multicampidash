@@ -101,6 +101,8 @@ def render_page_content(pathname):
         return monitoramento.get_layout(localities, 'salgueiro')
     elif pathname == '/monitoramento/garanhuns':
         return monitoramento.get_layout(localities, 'garanhuns')
+    elif pathname == '/monitoramento/arcoverde':
+        return monitoramento.get_layout(localities, 'arcoverde')
     elif pathname == '/mapas':
         return maps_layout
     elif pathname == '/sobre':
@@ -122,6 +124,7 @@ nav_monitor = dbc.DropdownMenu(
     children=[
         dbc.DropdownMenuItem("Mapas", href="/mapas"),
         dbc.DropdownMenuItem('Interativo', header=True),
+        dbc.DropdownMenuItem("Arcoverde", href="/monitoramento/arcoverde"),
         dbc.DropdownMenuItem("Garanhuns", href="/monitoramento/garanhuns"),
         dbc.DropdownMenuItem("Salgueiro", href="/monitoramento/salgueiro"),
     ],

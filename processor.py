@@ -44,7 +44,7 @@ def process_epg_data(epidemic_data:pd.DataFrame, campus, localities):
 
 
 # Start processing
-campi = ['garanhuns', 'salgueiro']
+campi = ['garanhuns', 'salgueiro', 'arcoverde']
 
 for campus in campi:
     localities = maps.load_cities_dataframe('data/localidades.csv')

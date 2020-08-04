@@ -4,7 +4,7 @@ import unidecode as und
 data = {}
 
 def get_raw_data(campus):
-    data = pd.read_excel('data/dados_raw_' + campus + '.xlsx', sheet_name=None, skiprows=1)
+    data = pd.read_excel('data/dados_raw_' + campus + '_2.xlsx', sheet_name=None, skiprows=1)
     worksheet_list = data.keys()
     result = pd.DataFrame()
 
@@ -13,7 +13,14 @@ def get_raw_data(campus):
         city = str.lower(und.unidecode(sheet))
         print(city)
         city_data = data[sheet]
-        city_data.columns = ['data', 'infectados', 'recuperados', 'obitos', 'novos']
+        if len(city_data.columns) == 6:
+            print(sheet)
+            city_data.columns = ['data', 'infectados', 'recuperados', 'obitos', 'acompanhamento', 'novos']
+            city_data.drop('acompanhamento', axis=1, inplace=True)
+        else:
+            city_data.columns = ['data', 'infectados', 'recuperados', 'obitos', 'novos']
+
+        city_data['data'] = city_data['data'].astype('datetime64')
         city_data.insert(0, 'cidade', city)
         result = result.append(city_data)
 
