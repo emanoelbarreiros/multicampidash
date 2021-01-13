@@ -4,7 +4,7 @@ import unidecode as und
 data = {}
 
 def get_raw_data(campus):
-    data = pd.read_excel('data/dados_raw_' + campus + '_6.xlsx', sheet_name=None, skiprows=1)
+    data = pd.read_excel('data/dados_raw_' + campus + '_7.xlsx', sheet_name=None, skiprows=1)
     worksheet_list = data.keys()
     result = pd.DataFrame()
 
