@@ -45,7 +45,7 @@ def get_layout():
         html.Div([
             html.Div([
                 html.Div([
-                    html.P('Dados atualizados em 20/07/2020 às 15h51.')
+                    html.P('Dados atualizados em 07/01/2021 às 15h51.')
                 ], className='col-12')
             ])
         ], className='row')
