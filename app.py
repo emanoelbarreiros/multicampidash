@@ -34,42 +34,44 @@ def load_data(file, nrows):
     return data
 
 
-def load_dict_from_csv_transp(file):
-    data = {}
-    with open(file, newline='', encoding='utf-8') as transportation:
-        reader = csv.reader(transportation, delimiter=';')
-        next(reader, None)  # skip the headers
-        for row in reader:
-            data[str.lower(row[0])] = row[1]
-    return data
+# def load_dict_from_csv_transp(file):
+#     data = {}
+#     with open(file, newline='', encoding='utf-8') as transportation:
+#         reader = csv.reader(transportation, delimiter=';')
+#         next(reader, None)  # skip the headers
+#         for row in reader:
+#             data[str.lower(row[0])] = row[1]
+#     return data
 
 
-def load_dict_from_csv_student(file):
-    data = {}
-    campi_courses = {'Geral': []}
-    with open(file, newline='', encoding='utf-8') as std_count:
-        reader = csv.reader(std_count, delimiter=';')
-        next(reader, None)  # skip the headers
-        for row in reader:
-            data[row[0] + '-' + row[1]] = row[2]
-            if row[0] in campi_courses:
-                campi_courses[row[0]].append(row[1])
-            else:
-                campi_courses[row[0]] = ['Geral', row[1]]
-    return data, campi_courses
+# def load_dict_from_csv_student(file):
+#     data = {}
+#     campi_courses = {'Geral': []}
+#     with open(file, newline='', encoding='utf-8') as std_count:
+#         reader = csv.reader(std_count, delimiter=';')
+#         next(reader, None)  # skip the headers
+#         for row in reader:
+#             data[row[0] + '-' + row[1]] = row[2]
+#             if row[0] in campi_courses:
+#                 campi_courses[row[0]].append(row[1])
+#             else:
+#                 campi_courses[row[0]] = ['Geral', row[1]]
+#     return data, campi_courses
 
 
 # this callback uses the current pathname to set the active state of the
 # corresponding nav link to true, allowing users to tell see page they are on
 @app.callback(
-    [Output(f'{p}-link', 'active') for p in ['multicampi', 'campus', 'monitoramento', 'mapas','sobre']],
+    #[Output(f'{p}-link', 'active') for p in ['multicampi', 'campus', 'monitoramento', 'mapas','sobre']],
+    [Output(f'{p}-link', 'active') for p in ['garanhuns', 'salgueiro', 'arcoverde', 'mapas','sobre']],
     [Input('url', 'pathname')],
 )
 def toggle_active_links(pathname):
     if pathname == '/':
         # Treat page 1 as the homepage / index
-        return True, False, False
-    return [pathname == f'/{i}' for i in ['multicampi', 'campus', 'curso', 'monitoramento', 'mapas', 'sobre']]
+        return True, False, False, False, False
+    #return [pathname == f'/{i}' for i in ['multicampi', 'campus', 'curso', 'monitoramento', 'mapas', 'sobre']]
+    return [pathname == f'/{i}' for i in ['garanhuns', 'salgueiro', 'arcoverde', 'mapas', 'sobre']]
 
 
 @app.callback(Output(f"navbar-collapse", "is_open"),
@@ -91,18 +93,20 @@ def get_target(path, path_target):
 
 @app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
 def render_page_content(pathname):
-    if pathname in ['/', '/multicampi']:
-        return multicampi_layout
-    elif pathname == '/campus':
-        return campus_layout
-    elif pathname == '/curso':
-        return course_layout
-    elif pathname == '/monitoramento/salgueiro':
-        return monitoramento.get_layout(localities, 'salgueiro')
-    elif pathname == '/monitoramento/garanhuns':
-        return monitoramento.get_layout(localities, 'garanhuns')
-    elif pathname == '/monitoramento/arcoverde':
-        return monitoramento.get_layout(localities, 'arcoverde')
+    # if pathname in ['/', '/multicampi']:
+    #     return multicampi_layout
+    # elif pathname == '/campus':
+    #     return campus_layout
+    # elif pathname == '/curso':
+    #     return course_layout
+    if pathname == "/" :
+        return monitoramento.get_layout(localities, 'garanhuns', 60)
+    elif pathname == '/salgueiro':
+        return monitoramento.get_layout(localities, 'salgueiro', 60)
+    elif pathname == '/garanhuns':
+        return monitoramento.get_layout(localities, 'garanhuns', 60)
+    elif pathname == '/arcoverde':
+        return monitoramento.get_layout(localities, 'arcoverde', 60)
     elif pathname == '/mapas':
         return maps_layout
     elif pathname == '/sobre':
@@ -117,21 +121,25 @@ def render_page_content(pathname):
     )
 
 
-nav_multicampi = dbc.NavItem(dbc.NavLink("Multicampi", href="/multicampi"))
-nav_campus = dbc.NavItem(dbc.NavLink("Campus", href="/campus"))
-nav_curso = dbc.NavItem(dbc.NavLink("Curso", href="/curso"))
-nav_monitor = dbc.DropdownMenu(
-    children=[
-        dbc.DropdownMenuItem("Mapas", href="/mapas"),
-        dbc.DropdownMenuItem('Interativo', header=True),
-        dbc.DropdownMenuItem("Arcoverde", href="/monitoramento/arcoverde"),
-        dbc.DropdownMenuItem("Garanhuns", href="/monitoramento/garanhuns"),
-        dbc.DropdownMenuItem("Salgueiro", href="/monitoramento/salgueiro"),
-    ],
-    nav=True,
-    in_navbar=True,
-    label="Mon. Epidemiológico",
-)
+#nav_multicampi = dbc.NavItem(dbc.NavLink("Multicampi", href="/multicampi"))
+#nav_campus = dbc.NavItem(dbc.NavLink("Campus", href="/campus"))
+#nav_curso = dbc.NavItem(dbc.NavLink("Curso", href="/curso"))
+# nav_monitor = dbc.DropdownMenu(
+#     children=[
+#         dbc.DropdownMenuItem("Mapas", href="/mapas"),
+#         dbc.DropdownMenuItem('Interativo', header=True),
+#         dbc.DropdownMenuItem("Arcoverde", href="/monitoramento/arcoverde"),
+#         dbc.DropdownMenuItem("Garanhuns", href="/monitoramento/garanhuns"),
+#         dbc.DropdownMenuItem("Salgueiro", href="/monitoramento/salgueiro"),
+#     ],
+#     nav=True,
+#     in_navbar=True,
+#     label="Mon. Epidemiológico",
+# )
+nav_salgueiro = dbc.NavItem(dbc.NavLink("Salgueiro", href="/salgueiro"))
+nav_garanhuns = dbc.NavItem(dbc.NavLink("Garanhuns", href="/garanhuns"))
+nav_arcoverde = dbc.NavItem(dbc.NavLink("Arcoverde", href="/arcoverde"))
+nav_mapas = dbc.NavItem(dbc.NavLink("Mapas", href="/mapas"))
 nav_sobre = dbc.NavItem(dbc.NavLink("Sobre", href="/sobre"))
 
 # this is the default navbar style created by the NavbarSimple component
@@ -162,7 +170,8 @@ navbar = dbc.Navbar(
             dbc.NavbarToggler(id="navbar-toggler"),
             dbc.Collapse(
                 dbc.Nav(
-                    [nav_multicampi, nav_campus, nav_curso, nav_monitor, nav_sobre], className="ml-auto", navbar=True
+                    #[nav_multicampi, nav_campus, nav_curso, nav_monitor, nav_sobre], className="ml-auto", navbar=True
+                    [nav_garanhuns, nav_salgueiro, nav_arcoverde, nav_mapas, nav_sobre], className="ml-auto", navbar=True
                 ),
                 id="navbar-collapse",
                 navbar=True,
@@ -179,15 +188,15 @@ flask = app.server
 content = html.Div(id='page-content', className='container')
 app.layout = html.Div([dcc.Location(id='url'), navbar, content])
 
-data = load_data('data/cidades_normalizadas3.csv', 0)
-student_count, campi_courses = load_dict_from_csv_student('data/qtd_estudantes.csv')
+#data = load_data('data/cidades_normalizadas3.csv', 0)
+#student_count, campi_courses = load_dict_from_csv_student('data/qtd_estudantes.csv')
 localities = maps.load_cities_dataframe('data/localidades.csv')
-schools = pd.read_csv('data/escolas.csv', sep=';')
-schools['cidade'] = schools['cidade'].apply(remove_accents)
+#schools = pd.read_csv('data/escolas.csv', sep=';')
+#schools['cidade'] = schools['cidade'].apply(remove_accents)
 
-multicampi_layout = multicampi.get_layout(data, student_count)
-course_layout = course.get_layout(data, student_count)
-campus_layout = campus.get_layout(data, schools)
+#multicampi_layout = multicampi.get_layout(data, student_count)
+#course_layout = course.get_layout(data, student_count)
+#campus_layout = campus.get_layout(data, schools)
 maps_layout = maps.get_layout()
 about_layout = about.get_layout()
 

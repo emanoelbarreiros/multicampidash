@@ -17,22 +17,22 @@ g_campus = None
 g_epidemic_data = None
 
 
-def get_layout(localities, campus):
-    global g_epidemic_data, dates_to_show, g_localities, g_campus
+def get_layout(localities, campus, days):
+    global g_epidemic_data, dates_to_show, g_localities, g_campus, g_epidemic_data
     g_campus = campus
     g_localities = localities
 
-    epidemic_data = sp.get_epidemic_data(campus)
-    g_epidemic_data = epidemic_data
+    g_epidemic_data = sp.get_epidemic_data(campus)
+    g_epidemic_data = g_epidemic_data
 
-    infected_graph = get_cumulative_infected_graph(epidemic_data)
-    recovered_graph = get_cumulative_recovered_graph(epidemic_data)
-    deceased_graph = get_cumulative_deceased_graph(epidemic_data)
-    epg_graphs = get_epg_rhot_graphs(epidemic_data, campus, localities)
-    new_cases_rolling_graph = get_rolling_per_day(g_epidemic_data)
-    new_cases_graph = get_new_per_day(g_epidemic_data)
+    infected_graph = get_cumulative_infected_graph(g_epidemic_data)
+    recovered_graph = get_cumulative_recovered_graph(g_epidemic_data)
+    deceased_graph = get_cumulative_deceased_graph(g_epidemic_data)
+    epg_graphs = get_epg_rhot_graphs(g_epidemic_data, campus, localities, days)
+    new_cases_rolling_graph = get_rolling_per_day(g_epidemic_data, days)
+    new_cases_graph = get_new_per_day(g_epidemic_data, days)
 
-    date_to_show = get_dates_to_show(epidemic_data, campus)
+    date_to_show = get_dates_to_show(g_epidemic_data, campus)
     infected_map = maps.get_infected_graph(g_epidemic_data, 200, date_to_show, g_campus)
 
     layout = html.Div([
@@ -84,12 +84,26 @@ def get_layout(localities, campus):
             html.Br(),
             html.H5('Gráficos de risco'),
             html.Hr(),
+            html.Br(),
+            html.Div(["Janela de dados: ",
+                      dcc.Dropdown(
+                          id='data-window',
+                          options=[
+                              {'label': 'Últimos 90 dias', 'value': '90'},
+                              {'label': 'Últimos 60 dias', 'value': '60'},
+                              {'label': 'Últimos 30 dias', 'value': '30'},
+                              {'label': 'Total', 'value': 'TOTAL'}
+                          ],
+                          value='90'
+                      ), ]
+                     ),
+            html.Br(),
             html.Div([
                 html.P('Os gráficos exibidos nesta seção foram adaptados do método desenvolvido pelo IRRD do Estado de Pernambuco.'),
                 html.A('IRRD', href='https://www.irrd.org/'),
                 html.A('Link para o método', href='https://drive.google.com/file/d/1Orwg6iwcClSNU4a8SXoqwKNpvdbW-dgj/view')
             ]),
-            html.Div(children=epg_graphs),
+            html.Div(id="epg-graphs", children=epg_graphs),
         ], className='col-12')
     ], className='row')
     return layout
@@ -127,10 +141,10 @@ def get_cumulative_deceased_graph(epidemic_data):
     return get_cumulative_log_graph(epidemic_data, 'obitos')
 
 
-def get_new_per_day(epidemic_data):
+def get_new_per_day(epidemic_data, days):
     fig = go.Figure()
     for city in epidemic_data.cidade.unique():
-        city_data = epidemic_data[epidemic_data.cidade == city]
+        city_data = epidemic_data[epidemic_data.cidade == city][-days:]
         x = city_data.data
         y = city_data['novos']
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=city))
@@ -139,11 +153,11 @@ def get_new_per_day(epidemic_data):
     return fig
 
 
-def get_rolling_per_day(epidemic_data:pd.DataFrame):
+def get_rolling_per_day(epidemic_data:pd.DataFrame, days):
     #epidemic_data.append TODO melhorar isso aqui ver se dá pra deixar de usar o copy
     fig = go.Figure()
     for city in epidemic_data.cidade.unique():
-        city_data = epidemic_data[epidemic_data.cidade == city]
+        city_data = epidemic_data[epidemic_data.cidade == city][-days:]
         x = city_data.data
         y = city_data['mm_novos']
         fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=city))
@@ -156,6 +170,17 @@ def get_rolling_per_day(epidemic_data:pd.DataFrame):
 def update_infected_map(date):
     infected_map = maps.get_infected_graph(g_epidemic_data, 200, dates_to_show[date], g_campus)
     return dcc.Graph(figure=infected_map)
+
+
+@app.callback(
+    Output(component_id='epg-graphs', component_property='children'),
+    [Input(component_id='data-window', component_property='value')])
+def update_output_div(input_value):
+    if input_value == "TOTAL":
+        return get_epg_rhot_graphs(g_epidemic_data, g_campus, g_localities, 0)
+    else:
+        days = int(input_value)
+        return get_epg_rhot_graphs(g_epidemic_data, g_campus, g_localities, days)
 
 
 def get_dates_to_show(epidemic_data, campus):
@@ -193,21 +218,35 @@ def get_epg_data(epidemic_data:pd.DataFrame, campus, localities):
     return result
 
 
-def get_epg_rhot_graphs(epidemic_data:pd.DataFrame, campus, localities):
+def get_epg_rhot_graphs(epidemic_data:pd.DataFrame, campus, localities, days):
     epg_data = get_epg_data(epidemic_data, campus, localities)
     result = []
     for city in epg_data.cidade.unique():
-        fig_bar = px.bar(epg_data[epg_data.cidade.eq(city)], y="epg", x="data", hover_name='risk', color='risk',
-                     color_discrete_map={
-                         "alto": "red",
-                         "moderadoalto": "orange",
-                         "moderado": "yellow",
-                         "baixo": "green"},
-                     title="Índice de crescimento potencial: {}".format(city))
+        if days > 0:
+            fig_bar = px.bar(epg_data[epg_data.cidade.eq(city)][-days:], y="epg", x="data", hover_name='risk', color='risk',
+                         color_discrete_map={
+                             "alto": "red",
+                             "moderadoalto": "orange",
+                             "moderado": "yellow",
+                             "baixo": "green"},
+                         title="Índice de crescimento potencial: {}".format(city))
+
+            x = epg_data[epg_data.cidade == city].data[-days:]
+            y = epg_data[epg_data.cidade == city]['rho_t'][-days:]
+        else:
+            fig_bar = px.bar(epg_data[epg_data.cidade.eq(city)], y="epg", x="data", hover_name='risk',
+                             color='risk',
+                             color_discrete_map={
+                                 "alto": "red",
+                                 "moderadoalto": "orange",
+                                 "moderado": "yellow",
+                                 "baixo": "green"},
+                             title="Índice de crescimento potencial: {}".format(city))
+
+            x = epg_data[epg_data.cidade == city].data
+            y = epg_data[epg_data.cidade == city]['rho_t']
 
         fig_rhot = go.Figure()
-        x = epg_data[epg_data.cidade == city].data
-        y = epg_data[epg_data.cidade == city]['rho_t']
         fig_rhot.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name=city, connectgaps=True))
         fig_rhot.update_layout(title='Velocidade de propagação (média de 7 dias): {}'.format(city), xaxis_title="data",
                                yaxis_title='rho (média de 7 dias)')
