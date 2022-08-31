@@ -1,7 +1,6 @@
 import pandas as pd
 import spreadsheets as sp
 from numpy import nan
-import maps
 
 
 def calculate_risk(epg):
@@ -45,10 +44,10 @@ def process_epg_data(epidemic_data:pd.DataFrame, campus, localities):
 
 # Start processing
 #campi = ['garanhuns', 'salgueiro', 'arcoverde']
-campi = ['garanhuns']
+campi = ['arcoverde']
 
 for campus in campi:
-    localities = maps.load_cities_dataframe('data/localidades.csv')
+    localities = pd.read_csv('data/localidades.csv', sep=',', dtype={"id": str})
     epidemic_data = sp.get_raw_data(campus)
 
     process_epg_data(epidemic_data, campus, localities)
