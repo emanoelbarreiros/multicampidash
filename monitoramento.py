@@ -33,7 +33,7 @@ def get_layout(localities, campus, days):
     new_cases_graph = get_new_per_day(g_epidemic_data, days)
 
     date_to_show = get_dates_to_show(g_epidemic_data, campus)
-    infected_map = maps.get_infected_graph(g_epidemic_data, 100, date_to_show, g_campus)
+    infected_map = maps.get_infected_graph(g_epidemic_data, 7500, date_to_show, g_campus)
 
     layout = html.Div([
         html.Div([
