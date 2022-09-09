@@ -106,7 +106,7 @@ def render_page_content(pathname):
     elif pathname == '/garanhuns':
         return monitoramento.get_layout(localities, 'garanhuns', 60)
     elif pathname == '/arcoverde':
-        return monitoramento.get_layout(localities, 'arcoverde', 60)
+        return monitoramento.get_layout(localities, 'arcoverde', 365)
     elif pathname == '/mapas':
         return maps_layout
     elif pathname == '/sobre':
